@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ChevronLeft, Loader2, ShoppingBasket } from "lucide-react";
@@ -77,8 +78,13 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ planI
               const entry = (entriesByDay.get(idx) ?? []).find((e) => e.mealType === mealType);
               if (!entry) return null;
               return (
-                <Card key={mealType}>
-                  <CardContent className="flex items-center justify-between p-4">
+                <Card key={mealType} className="overflow-hidden">
+                  <CardContent className="flex items-center gap-3 p-4">
+                    {entry.foodItem.imageUrl && (
+                      <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted">
+                        <Image src={entry.foodItem.imageUrl} alt={entry.foodItem.name} fill sizes="56px" className="object-cover" />
+                      </div>
+                    )}
                     <div>
                       <Badge variant="muted" className="mb-1.5">
                         {mealType[0] + mealType.slice(1).toLowerCase()}
