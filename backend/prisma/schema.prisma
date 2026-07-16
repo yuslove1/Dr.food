@@ -153,7 +153,7 @@ enum FoodCategory {
 
 model FoodItem {
   id             String       @id @default(cuid())
-  name           String
+  name           String       @unique
   localName      String?
   category       FoodCategory
   caloriesPer100g Float
@@ -313,7 +313,7 @@ enum ProductSource {
 
 model Product {
   id               String        @id @default(cuid())
-  name             String
+  name             String        @unique
   category         FoodCategory
   unit             String
   pricePerUnit     Decimal       @db.Decimal(10, 2)
