@@ -1,0 +1,678 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Core / Auth
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  USER
+  DIETITIAN
+  VENDOR
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String
+  fullName     String
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  healthProfile   HealthProfile?
+  familyMembers   FamilyMember[]
+  mealPlans       MealPlan[]
+  mealLogs        MealLog[]
+  shoppingLists   ShoppingList[]
+  cartItems       CartItem[]
+  orders          Order[]
+  subscriptions   Subscription[]
+  refreshTokens   RefreshToken[]
+  bookingsAsUser  Booking[]        @relation("BookingUser")
+  dietitianProfile DietitianProfile?
+  vendor          Vendor?
+  posts           Post[]
+  likes           Like[]
+  comments        Comment[]
+  followedBy      Follow[]         @relation("Following")
+  following       Follow[]         @relation("Follower")
+  payments        Payment[]
+  wallet          Wallet?
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// User / Family profiles (5.1 Onboarding)
+// ---------------------------------------------------------------------------
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHT
+  MODERATE
+  ACTIVE
+  VERY_ACTIVE
+}
+
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+}
+
+enum DeliveryZone {
+  LEKKI
+  VICTORIA_ISLAND
+  IKEJA
+  YABA
+  SURULERE
+  OTHER
+}
+
+model HealthProfile {
+  id                   String        @id @default(cuid())
+  userId               String        @unique
+  age                  Int?
+  gender               String?
+  heightCm             Float?
+  weightKg             Float?
+  activityLevel        ActivityLevel @default(MODERATE)
+  goals                String[]      @default([])
+  medicalConditions    String[]      @default([])
+  dietaryRestrictions  String[]      @default([])
+  allergies            String[]      @default([])
+  budgetAmount         Decimal?      @db.Decimal(10, 2)
+  budgetPeriod         BudgetPeriod  @default(WEEKLY)
+  deliveryZone         DeliveryZone?
+  address              String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("health_profiles")
+}
+
+model FamilyMember {
+  id                  String   @id @default(cuid())
+  userId              String
+  name                String
+  relationship        String
+  age                 Int?
+  gender              String?
+  heightCm            Float?
+  weightKg            Float?
+  medicalConditions   String[] @default([])
+  dietaryRestrictions String[] @default([])
+  allergies           String[] @default([])
+  createdAt           DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlans MealPlan[]
+
+  @@index([userId])
+  @@map("family_members")
+}
+
+// ---------------------------------------------------------------------------
+// Nutrition (Pillar 2 - AI Nutrition Advisor)
+// ---------------------------------------------------------------------------
+
+enum FoodCategory {
+  PROTEIN
+  GRAIN
+  VEGETABLE
+  FRUIT
+  SOUP
+  SNACK
+  SPICE
+  PANTRY
+}
+
+model FoodItem {
+  id             String       @id @default(cuid())
+  name           String
+  localName      String?
+  category       FoodCategory
+  caloriesPer100g Float
+  proteinG       Float
+  carbsG         Float
+  fatG           Float
+  fiberG         Float
+  tags           String[]     @default([])
+  description    String?
+  imageUrl       String?
+  createdAt      DateTime     @default(now())
+
+  ingredients    FoodItemIngredient[]
+  mealPlanEntries MealPlanEntry[]
+  mealLogs       MealLog[]
+  posts          Post[]
+
+  @@map("food_items")
+}
+
+model FoodItemIngredient {
+  id                String  @id @default(cuid())
+  foodItemId        String
+  name              String
+  quantityPerServing Float
+  unit              String
+  productId         String?
+
+  foodItem FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  product  Product? @relation(fields: [productId], references: [id])
+
+  @@index([foodItemId])
+  @@map("food_item_ingredients")
+}
+
+enum MealPlanType {
+  WEEKLY
+  MONTHLY
+}
+
+enum MealPlanStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum PlanGeneratedBy {
+  AI
+  DIETITIAN
+}
+
+model MealPlan {
+  id                 String          @id @default(cuid())
+  userId             String
+  familyMemberId     String?
+  type               MealPlanType    @default(WEEKLY)
+  startDate          DateTime
+  endDate            DateTime
+  status             MealPlanStatus  @default(ACTIVE)
+  generatedBy        PlanGeneratedBy @default(AI)
+  totalEstimatedCost Decimal?        @db.Decimal(10, 2)
+  createdAt          DateTime        @default(now())
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyMember FamilyMember?   @relation(fields: [familyMemberId], references: [id])
+  entries      MealPlanEntry[]
+  shoppingList ShoppingList?
+
+  @@index([userId])
+  @@map("meal_plans")
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+model MealPlanEntry {
+  id         String   @id @default(cuid())
+  mealPlanId String
+  dayOfWeek  Int
+  mealType   MealType
+  foodItemId String
+  servings   Float    @default(1)
+
+  mealPlan MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  foodItem FoodItem @relation(fields: [foodItemId], references: [id])
+
+  @@index([mealPlanId])
+  @@map("meal_plan_entries")
+}
+
+model MealLog {
+  id       String   @id @default(cuid())
+  userId   String
+  date     DateTime
+  mealType MealType
+  foodItemId String?
+  eaten    Boolean  @default(true)
+  notes    String?
+  createdAt DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodItem FoodItem? @relation(fields: [foodItemId], references: [id])
+
+  @@index([userId])
+  @@map("meal_logs")
+}
+
+enum ShoppingListStatus {
+  DRAFT
+  SENT_TO_CART
+  ORDERED
+}
+
+model ShoppingList {
+  id            String             @id @default(cuid())
+  mealPlanId    String             @unique
+  userId        String
+  status        ShoppingListStatus @default(DRAFT)
+  estimatedCost Decimal?           @db.Decimal(10, 2)
+  createdAt     DateTime           @default(now())
+
+  mealPlan MealPlan           @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items    ShoppingListItem[]
+
+  @@map("shopping_lists")
+}
+
+model ShoppingListItem {
+  id             String  @id @default(cuid())
+  shoppingListId String
+  ingredientName String
+  quantity       Float
+  unit           String
+  productId      String?
+  estimatedPrice Decimal? @db.Decimal(10, 2)
+
+  shoppingList ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  product      Product?     @relation(fields: [productId], references: [id])
+
+  @@index([shoppingListId])
+  @@map("shopping_list_items")
+}
+
+// ---------------------------------------------------------------------------
+// Dr Foods Bank (Pillar 1 - Grocery & Delivery)
+// ---------------------------------------------------------------------------
+
+enum ProductSource {
+  DIRECT_SUPPLIER
+  PARTNER_STORE
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  name             String
+  category         FoodCategory
+  unit             String
+  pricePerUnit     Decimal       @db.Decimal(10, 2)
+  stockQty         Int           @default(0)
+  imageUrl         String?
+  description      String?
+  source           ProductSource @default(DIRECT_SUPPLIER)
+  conditionTags    String[]      @default([])
+  storageMethod    String?
+  shelfLifeDays    Int?
+  prepInstructions String?
+  createdAt        DateTime      @default(now())
+
+  foodItemIngredients FoodItemIngredient[]
+  shoppingListItems   ShoppingListItem[]
+  cartItems           CartItem[]
+  orderItems          OrderItem[]
+
+  @@map("products")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+enum OrderType {
+  ONE_TIME
+  WEEKLY_SUBSCRIPTION
+  MONTHLY_BULK
+  CONDITION_SPECIFIC
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  PACKED
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  orderType       OrderType   @default(ONE_TIME)
+  status          OrderStatus @default(PENDING_PAYMENT)
+  deliveryDate    DateTime
+  deliveryWindow  String
+  deliveryAddress String
+  subtotal        Decimal     @db.Decimal(10, 2)
+  deliveryFee     Decimal     @db.Decimal(10, 2) @default(0)
+  total           Decimal     @db.Decimal(10, 2)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items    OrderItem[]
+  payments Payment[]
+
+  @@index([userId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  lineTotal Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+enum SubscriptionFrequency {
+  WEEKLY
+  MONTHLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+model Subscription {
+  id               String                @id @default(cuid())
+  userId           String
+  frequency        SubscriptionFrequency @default(WEEKLY)
+  status           SubscriptionStatus    @default(ACTIVE)
+  nextDeliveryDate DateTime
+  createdAt        DateTime              @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+// ---------------------------------------------------------------------------
+// Dietitian Marketplace (Pillar 2 - scaffold)
+// ---------------------------------------------------------------------------
+
+model DietitianProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  bio              String?
+  specializations  String[] @default([])
+  credentials      String[] @default([])
+  verified         Boolean  @default(false)
+  institutionName  String?
+  pricePerSession  Decimal  @db.Decimal(10, 2) @default(0)
+  yearsExperience  Int?
+  createdAt        DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@map("dietitian_profiles")
+}
+
+enum ConsultationType {
+  ONE_TIME
+  MONTHLY_SUBSCRIPTION
+  PLAN_REVIEW
+}
+
+enum BookingStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Booking {
+  id                 String            @id @default(cuid())
+  userId             String
+  dietitianProfileId String
+  consultationType   ConsultationType  @default(ONE_TIME)
+  status             BookingStatus     @default(REQUESTED)
+  scheduledAt        DateTime
+  price              Decimal           @db.Decimal(10, 2)
+  commissionRate     Float             @default(0.25)
+  createdAt          DateTime          @default(now())
+
+  user             User             @relation("BookingUser", fields: [userId], references: [id], onDelete: Cascade)
+  dietitianProfile DietitianProfile @relation(fields: [dietitianProfileId], references: [id], onDelete: Cascade)
+  review           Review?
+
+  @@index([userId])
+  @@index([dietitianProfileId])
+  @@map("bookings")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+// ---------------------------------------------------------------------------
+// Social Feed (Pillar 3 - scaffold)
+// ---------------------------------------------------------------------------
+
+enum PostAuthorType {
+  USER
+  DIETITIAN
+  BANK
+  VENDOR
+}
+
+model Post {
+  id         String         @id @default(cuid())
+  authorId   String
+  authorType PostAuthorType @default(USER)
+  caption    String?
+  imageUrl   String
+  foodItemId String?
+  createdAt  DateTime       @default(now())
+
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  foodItem FoodItem? @relation(fields: [foodItemId], references: [id])
+  likes    Like[]
+  comments Comment[]
+
+  @@index([authorId])
+  @@map("posts")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("comments")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// ---------------------------------------------------------------------------
+// Vendor & Home Cook Storefronts (scaffold)
+// ---------------------------------------------------------------------------
+
+enum VendorType {
+  HOME_KITCHEN
+  REGISTERED_RESTAURANT
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Vendor {
+  id                String       @id @default(cuid())
+  userId            String       @unique
+  businessName      String
+  type              VendorType   @default(HOME_KITCHEN)
+  status            VendorStatus @default(PENDING)
+  deliveryRadiusKm  Float?
+  createdAt         DateTime     @default(now())
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listings VendorListing[]
+
+  @@map("vendors")
+}
+
+model VendorListing {
+  id          String   @id @default(cuid())
+  vendorId    String
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  imageUrl    String?
+  available   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@map("vendor_listings")
+}
+
+// ---------------------------------------------------------------------------
+// Payments (scaffold)
+// ---------------------------------------------------------------------------
+
+enum PaymentProvider {
+  PAYSTACK
+  FLUTTERWAVE
+  WALLET
+  MOCK
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id        String          @id @default(cuid())
+  userId    String
+  orderId   String?
+  provider  PaymentProvider @default(MOCK)
+  amount    Decimal         @db.Decimal(10, 2)
+  status    PaymentStatus   @default(PENDING)
+  reference String          @unique
+  createdAt DateTime        @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Decimal  @db.Decimal(10, 2) @default(0)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+// ---------------------------------------------------------------------------
+// Admin / Ops (scaffold)
+// ---------------------------------------------------------------------------
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+model PromoCode {
+  id           String       @id @default(cuid())
+  code         String       @unique
+  discountType DiscountType @default(PERCENT)
+  value        Decimal      @db.Decimal(10, 2)
+  expiresAt    DateTime?
+  maxUses      Int?
+  usedCount    Int          @default(0)
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  @@map("promo_codes")
+}
