@@ -1,0 +1,28 @@
+.DS_Store
+
+# dependencies
+node_modules/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# backend build
+backend/dist/
+
+# frontend build
+frontend/.next/
+frontend/out/
+frontend/public/sw.js
+frontend/public/sw.js.map
+frontend/public/workbox-*.js
+frontend/public/workbox-*.js.map
+
+# logs
+*.log
+npm-debug.log*
+
+# editor
+.vscode/
+.idea/
