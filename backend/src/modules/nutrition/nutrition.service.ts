@@ -54,7 +54,15 @@ export async function generateMealPlan(userId: string, input: GeneratePlanInput)
     throw HttpError.badRequest("No food items available — run the database seed first");
   }
 
-  const aiPlan = await generateAiMealPlan(profile, foodItems);
+  let aiPlan;
+  try {
+    aiPlan = await generateAiMealPlan(profile, foodItems);
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("ANTHROPIC_API_KEY")) {
+      throw new HttpError(503, "AI meal plan generation isn't configured yet — set ANTHROPIC_API_KEY in backend/.env");
+    }
+    throw err;
+  }
   const foodItemByName = new Map(foodItems.map((f) => [f.name.toLowerCase(), f]));
 
   const startDate = new Date();
