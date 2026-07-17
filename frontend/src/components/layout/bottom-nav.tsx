@@ -2,22 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Salad, ShoppingBasket, Stethoscope, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { href: "/feed", label: "Home", icon: Home },
-  { href: "/nutrition", label: "Nutrition", icon: Salad },
-  { href: "/bank", label: "Bank", icon: ShoppingBasket },
-  { href: "/dietitians", label: "Dietitians", icon: Stethoscope },
-  { href: "/profile", label: "Profile", icon: User },
-];
+import { NAV_ITEMS } from "./nav-items";
 
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)] md:hidden">
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);

@@ -47,7 +47,7 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="fullName">Full name</Label>
-          <Input id="fullName" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Temi Adebayo" />
+          <Input id="fullName" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Yusuf Adesina" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>

@@ -73,7 +73,7 @@ export default function BankCatalogPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {products?.map((product) => (
           <Card key={product.id} className="overflow-hidden">
             <div className="relative aspect-square w-full bg-muted">
@@ -81,7 +81,7 @@ export default function BankCatalogPage() {
                 src={product.imageUrl || categoryImage(product.category)}
                 alt={product.name}
                 fill
-                sizes="200px"
+                sizes="(min-width: 768px) 260px, 200px"
                 className="object-cover"
               />
             </div>
