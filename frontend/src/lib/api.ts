@@ -74,4 +74,35 @@ export const api = {
   delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
 };
 
+// Separate from apiFetch because file uploads must NOT be JSON-encoded or set
+// Content-Type themselves — the browser sets the multipart boundary automatically.
+export async function apiUpload<T = unknown>(
+  path: string,
+  formData: FormData,
+  skipAuthRetry = false
+): Promise<T> {
+  const token = getAccessToken();
+
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    credentials: "include",
+    body: formData,
+  });
+
+  if (res.status === 401 && !skipAuthRetry) {
+    const newToken = await refreshAccessToken();
+    if (newToken) return apiUpload<T>(path, formData, true);
+  }
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : undefined;
+
+  if (!res.ok) {
+    throw new ApiError(res.status, data?.error ?? "Upload failed", data?.details);
+  }
+
+  return data as T;
+}
+
 export { refreshAccessToken, API_URL };

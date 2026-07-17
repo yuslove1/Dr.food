@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, Loader2, MessageCircle } from "lucide-react";
+import { Heart, Loader2, MessageCircle, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Icon3D } from "@/components/icon-3d";
+import { CreatePostDialog } from "@/components/feed/create-post-dialog";
 import { useFeedPosts, useLikePost } from "@/hooks/use-feed";
 
 export default function FeedPage() {
@@ -14,9 +15,18 @@ export default function FeedPage() {
 
   return (
     <div className="flex flex-col gap-5 py-4">
-      <div>
-        <h1 className="font-display text-2xl font-bold">Home</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Meal preps, recipes, and dietitian tips from the community.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Home</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Meal preps, recipes, and dietitian tips from the community.</p>
+        </div>
+        <CreatePostDialog
+          trigger={
+            <Button size="icon" className="shrink-0 rounded-full">
+              <Plus className="size-5" />
+            </Button>
+          }
+        />
       </div>
 
       {isLoading && (
@@ -31,13 +41,13 @@ export default function FeedPage() {
             <Image src="/images/foods/hero-spread.jpg" alt="" fill className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           </div>
-          <CardContent className="flex flex-col items-center gap-2 p-6 text-center">
+          <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
             <Icon3D name="fork-and-knife-with-plate" size={48} />
             <p className="text-sm font-medium">The feed is just getting started</p>
             <p className="text-xs text-muted-foreground">
-              Meal preps, recipes, and dietitian tips will show up here as the Dr Foods community grows. Post
-              creation is coming in the next build.
+              Be the first to share a meal prep, recipe, or nutrition tip with the Dr Foods community.
             </p>
+            <CreatePostDialog trigger={<Button size="sm">Share a meal</Button>} />
           </CardContent>
         </Card>
       )}

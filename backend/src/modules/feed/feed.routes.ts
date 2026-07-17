@@ -1,12 +1,34 @@
 import { Router } from "express";
+import multer from "multer";
 import { z } from "zod";
 import { asyncHandler } from "../../lib/async-handler";
 import { requireAuth, type AuthenticatedRequest } from "../../middleware/auth";
 import { prisma } from "../../lib/prisma";
+import { env } from "../../config/env";
+import { HttpError } from "../../lib/http-error";
+import { uploadImage } from "./upload.middleware";
 
 // Scaffold only — discover tab, stories, moderation tools, and promoted listings are a
 // future pass (see plan: "Social Feed" is schema + thin routes for this build).
 export const feedRouter = Router();
+
+feedRouter.post(
+  "/upload",
+  requireAuth,
+  (req, res, next) => {
+    uploadImage(req, res, (err: unknown) => {
+      if (err) {
+        const message = err instanceof multer.MulterError || err instanceof Error ? err.message : "Upload failed";
+        return next(HttpError.badRequest(message));
+      }
+      next();
+    });
+  },
+  asyncHandler(async (req, res) => {
+    if (!req.file) throw HttpError.badRequest("No image file provided");
+    res.status(201).json({ url: `${env.APP_URL}/uploads/feed/${req.file.filename}` });
+  })
+);
 
 feedRouter.get(
   "/posts",

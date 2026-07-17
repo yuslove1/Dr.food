@@ -10,6 +10,7 @@ node_modules/
 
 # backend build
 backend/dist/
+backend/uploads/
 
 # frontend build
 frontend/.next/

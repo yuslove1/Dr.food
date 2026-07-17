@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, apiUpload } from "@/lib/api";
 
 export interface FeedPost {
   id: string;
@@ -23,6 +23,25 @@ export function useLikePost() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (postId: string) => api.post(`/feed/posts/${postId}/like`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["feed-posts"] }),
+  });
+}
+
+export function useUploadPostImage() {
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("image", file);
+      return apiUpload<{ url: string }>("/feed/upload", formData);
+    },
+  });
+}
+
+export function useCreatePost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { imageUrl: string; caption?: string; foodItemId?: string }) =>
+      api.post<FeedPost>("/feed/posts", input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["feed-posts"] }),
   });
 }
