@@ -15,6 +15,17 @@ npm run dev              # http://localhost:4000
 
 > **Note:** `prisma generate` / `migrate dev` download a platform-specific engine binary from Prisma's CDN on first run. If you're running this inside a network-restricted sandbox, run these two commands from a normal terminal with full internet access first — everything after that works offline against your local Postgres.
 
+### Test account
+
+`prisma:seed` creates (or upserts) a ready-to-use account with onboarding already complete, so you land straight in the app:
+
+```
+email:    test@gmail.com
+password: Test123456789
+```
+
+Defined in `prisma/seed.ts` (`TEST_ACCOUNT`) — re-running the seed keeps it in sync, and it's created the same way in any environment you seed (local, staging, etc.).
+
 ## Structure
 
 - `src/modules/*` — one folder per domain (`auth`, `users`, `nutrition`, `bank` are fully built; `dietitians`, `feed`, `vendors`, `payments` are schema + thin routes, scaffolded for the next build pass)
