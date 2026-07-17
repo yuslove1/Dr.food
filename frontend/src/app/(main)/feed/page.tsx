@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, Loader2, MessageCircle, Sparkles } from "lucide-react";
+import { Heart, Loader2, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Icon3D } from "@/components/icon-3d";
 import { useFeedPosts, useLikePost } from "@/hooks/use-feed";
 
 export default function FeedPage() {
@@ -31,7 +32,7 @@ export default function FeedPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           </div>
           <CardContent className="flex flex-col items-center gap-2 p-6 text-center">
-            <Sparkles className="size-6 text-primary" />
+            <Icon3D name="fork-and-knife-with-plate" size={48} />
             <p className="text-sm font-medium">The feed is just getting started</p>
             <p className="text-xs text-muted-foreground">
               Meal preps, recipes, and dietitian tips will show up here as the Dr Foods community grows. Post

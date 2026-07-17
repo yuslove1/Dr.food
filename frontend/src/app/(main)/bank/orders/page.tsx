@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Loader2, Package } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Icon3D } from "@/components/icon-3d";
 import { useOrders } from "@/hooks/use-bank";
 import { formatNaira } from "@/lib/utils";
 
@@ -32,7 +33,7 @@ export default function OrdersPage() {
       {!isLoading && orders?.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
-            <Package className="size-8 text-muted-foreground" />
+            <Icon3D name="package" size={56} />
             <p className="text-sm text-muted-foreground">No orders yet.</p>
           </CardContent>
         </Card>

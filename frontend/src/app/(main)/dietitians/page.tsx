@@ -1,9 +1,10 @@
 "use client";
 
-import { Loader2, Stethoscope } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Icon3D } from "@/components/icon-3d";
 import { useDietitians } from "@/hooks/use-dietitians";
 import { formatNaira } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ export default function DietitiansPage() {
       {!isLoading && dietitians?.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
-            <Stethoscope className="size-8 text-muted-foreground" />
+            <Icon3D name="stethoscope" size={56} />
             <p className="text-sm font-medium">No dietitians listed yet</p>
             <p className="text-xs text-muted-foreground">
               Founding dietitian partners will appear here — booking, in-app messaging, and video consultations are

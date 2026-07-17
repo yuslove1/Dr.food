@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, Loader2, Minus, Plus, ShoppingBasket } from "lucide-react";
+import { ChevronLeft, Loader2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Icon3D } from "@/components/icon-3d";
 import { useCart, useUpdateCartItem } from "@/hooks/use-bank";
 import { categoryImage } from "@/lib/category-images";
 import { formatNaira } from "@/lib/utils";
@@ -33,7 +34,7 @@ export default function CartPage() {
       {cart.items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
-            <ShoppingBasket className="size-8 text-muted-foreground" />
+            <Icon3D name="shopping-cart" size={56} />
             <p className="text-sm text-muted-foreground">Your cart is empty.</p>
             <Button asChild size="sm" className="mt-2">
               <Link href="/bank">Browse Dr Foods Bank</Link>

@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CalendarDays, ChefHat, Loader2, Sparkles } from "lucide-react";
+import { CalendarDays, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Icon3D } from "@/components/icon-3d";
 import { useGenerateMealPlan, useMealPlans } from "@/hooks/use-nutrition";
 import { ApiError } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
@@ -38,10 +39,8 @@ export default function NutritionPage() {
 
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="flex flex-col gap-3 p-5">
-          <div className="flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Sparkles className="size-4" />
-            </span>
+          <div className="flex items-center gap-3">
+            <Icon3D name="sparkles" size={40} />
             <div>
               <p className="font-display text-sm font-semibold">Generate a new plan</p>
               <p className="text-xs text-muted-foreground">Built from your health profile</p>
@@ -77,7 +76,7 @@ export default function NutritionPage() {
         {!isLoading && plans?.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center gap-2 p-8 text-center">
-              <ChefHat className="size-8 text-muted-foreground" />
+              <Icon3D name="pot-of-food" size={56} />
               <p className="text-sm text-muted-foreground">No meal plans yet — generate your first one above.</p>
             </CardContent>
           </Card>
