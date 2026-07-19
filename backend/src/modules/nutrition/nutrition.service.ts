@@ -58,8 +58,8 @@ export async function generateMealPlan(userId: string, input: GeneratePlanInput)
   try {
     aiPlan = await generateAiMealPlan(profile, foodItems);
   } catch (err) {
-    if (err instanceof Error && err.message.includes("ANTHROPIC_API_KEY")) {
-      throw new HttpError(503, "AI meal plan generation isn't configured yet — set ANTHROPIC_API_KEY in backend/.env");
+    if (err instanceof Error && err.message.startsWith("AI_PROVIDER_NOT_CONFIGURED")) {
+      throw new HttpError(503, err.message.replace("AI_PROVIDER_NOT_CONFIGURED: ", ""));
     }
     throw err;
   }

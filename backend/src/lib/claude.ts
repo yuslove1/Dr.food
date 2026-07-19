@@ -6,7 +6,7 @@ let client: Anthropic | null = null;
 export function getClaudeClient(): Anthropic {
   if (!env.ANTHROPIC_API_KEY) {
     throw new Error(
-      "ANTHROPIC_API_KEY is not set. Add it to backend/.env to enable AI meal plan generation."
+      "AI_PROVIDER_NOT_CONFIGURED: ANTHROPIC_API_KEY is not set. Add it to backend/.env, or set AI_PROVIDER=groq for a free alternative."
     );
   }
   if (!client) {
