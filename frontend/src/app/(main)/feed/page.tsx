@@ -7,17 +7,31 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Icon3D } from "@/components/icon-3d";
 import { CreatePostDialog } from "@/components/feed/create-post-dialog";
+import { TrendingDishes } from "@/components/feed/trending-dishes";
 import { useFeedPosts, useLikePost } from "@/hooks/use-feed";
+import { useAuth } from "@/lib/auth-context";
+import { formatRelativeTime } from "@/lib/utils";
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function FeedPage() {
   const { data: posts, isLoading } = useFeedPosts();
+  const { user } = useAuth();
   const like = useLikePost();
+  const firstName = user?.fullName.split(" ")[0];
 
   return (
-    <div className="flex flex-col gap-5 py-4">
+    <div className="flex flex-col gap-6 py-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold">Home</h1>
+          <h1 className="font-display text-2xl font-bold">
+            {getGreeting()}{firstName ? `, ${firstName}` : ""} 👋
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">Meal preps, recipes, and dietitian tips from the community.</p>
         </div>
         <CreatePostDialog
@@ -28,6 +42,8 @@ export default function FeedPage() {
           }
         />
       </div>
+
+      <TrendingDishes />
 
       {isLoading && (
         <div className="flex justify-center py-10">
@@ -55,17 +71,22 @@ export default function FeedPage() {
       <div className="flex flex-col gap-4">
         {posts?.map((post) => (
           <Card key={post.id} className="overflow-hidden">
-            <div className="flex items-center gap-2 p-3">
-              <Avatar className="size-8">
-                <AvatarFallback>{post.author.fullName[0]}</AvatarFallback>
+            <div className="flex items-center gap-2.5 p-3">
+              <Avatar className="size-9 ring-2 ring-primary/15 ring-offset-2 ring-offset-card">
+                <AvatarFallback className="text-xs">{post.author.fullName[0]}</AvatarFallback>
               </Avatar>
-              <div>
-                <p className="text-sm font-medium">{post.author.fullName}</p>
-                {post.foodItem && <p className="text-xs text-muted-foreground">{post.foodItem.name}</p>}
+              <div className="flex-1">
+                <p className="text-sm font-semibold leading-tight">{post.author.fullName}</p>
+                <p className="text-[11px] text-muted-foreground">{formatRelativeTime(post.createdAt)}</p>
               </div>
             </div>
             <div className="relative aspect-square w-full bg-muted">
               <Image src={post.imageUrl} alt={post.caption ?? ""} fill className="object-cover" />
+              {post.foodItem && (
+                <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                  {post.foodItem.name}
+                </span>
+              )}
             </div>
             <CardContent className="flex flex-col gap-2 p-3">
               {post.caption && <p className="text-sm">{post.caption}</p>}
